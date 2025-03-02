@@ -5,22 +5,25 @@ Este proyecto implementa un sistema de redes neuronales que simula compuertas l�
 ## Tabla de Contenidos
 - [Características](#características)
 - [Compuertas Lógicas Implementadas](#compuertas-lógicas-implementadas)
+- [Estructura del Proyecto](#estructura-del-proyecto)
 - [Requisitos](#requisitos)
 - [Instalación](#instalación)
 - [Uso](#uso)
 - [Detalles de Implementación](#detalles-de-implementación)
 - [Parámetros de Entrenamiento](#parámetros-de-entrenamiento)
-- [Estructura del Proyecto](#estructura-del-proyecto)
+- [Optimizadores Disponibles](#optimizadores-disponibles)
 - [Visualizaciones](#visualizaciones)
+- [Extensibilidad](#extensibilidad)
 - [Licencia](#licencia)
 
 ## Características
 
 - Implementación de 7 compuertas lógicas fundamentales
+- Arquitectura modular y orientada a objetos
+- Múltiples optimizadores para entrenamiento de redes neuronales
 - Interfaz gráfica interactiva con Tkinter
 - Visualización en tiempo real de los límites de decisión
 - Monitoreo del progreso de entrenamiento
-- Optimización avanzada usando el optimizador Adam
 - Visualización de resultados y predicciones
 
 ## Compuertas Lógicas Implementadas
@@ -39,6 +42,26 @@ Este proyecto implementa un sistema de redes neuronales que simula compuertas l�
 |-----------|-------------|-----------------|
 | **XOR** | Devuelve 1 si las entradas son diferentes | (0,0)→0, (0,1)→1, (1,0)→1, (1,1)→0 |
 | **XNOR** | Negación de XOR | (0,0)→1, (0,1)→0, (1,0)→0, (1,1)→1 |
+
+## Estructura del Proyecto
+
+```
+neurona/
+├── puertas_logicas/
+│   ├── __init__.py           # Hace que la carpeta sea un paquete Python
+│   ├── common.py             # Funciones comunes para todas las puertas lógicas
+│   ├── perceptron_gates.py   # Implementación de puertas basadas en perceptrón simple
+│   ├── neural_network_gates.py # Implementación de puertas basadas en redes neuronales
+│   └── optimizers.py         # Implementación de optimizadores
+└── logic_functions_perceptron_neural_network.py  # Archivo principal con la interfaz gráfica
+```
+
+### Descripción de los Módulos
+
+- **common.py**: Contiene funciones de activación y utilidades compartidas por todas las puertas lógicas.
+- **perceptron_gates.py**: Implementa la clase base `PerceptronGate` y las clases específicas para cada puerta lógica basada en perceptrón simple.
+- **neural_network_gates.py**: Implementa la clase base `NeuralNetworkGate` y las clases específicas para puertas lógicas que requieren redes multicapa.
+- **optimizers.py**: Contiene diferentes algoritmos de optimización para el entrenamiento de redes neuronales.
 
 ## Requisitos
 
@@ -73,6 +96,23 @@ Al hacer clic en cualquier compuerta:
 
 ## Detalles de Implementación
 
+### Arquitectura Orientada a Objetos
+
+El proyecto utiliza una jerarquía de clases para representar las puertas lógicas:
+
+```
+LogicGate (clase base abstracta)
+├── PerceptronGate (para problemas linealmente separables)
+│   ├── AND
+│   ├── OR
+│   ├── NOT
+│   ├── NAND
+│   └── NOR
+└── NeuralNetworkGate (para problemas no linealmente separables)
+    ├── XOR
+    └── XNOR
+```
+
 ### Perceptrón Simple
 - **Arquitectura**: Una sola capa con función de activación escalonada
 - **Aplicación**: Compuertas AND, OR, NOT, NAND y NOR
@@ -87,12 +127,7 @@ Al hacer clic en cualquier compuerta:
 - **Características**:
   - Función de activación sigmoide
   - Algoritmo de retropropagación (backpropagation)
-  - Optimizador Adam para convergencia más rápida y estable
-
-### Visualización
-- **Compuertas 2D**: Límites de decisión para AND, OR, XOR, NAND, NOR y XNOR
-- **Compuerta NOT**: Gráfico de función 1D
-- **Resultados**: Tabla de valores de entrada, salida y valores esperados
+  - Optimizadores avanzados para convergencia más rápida y estable
 
 ## Parámetros de Entrenamiento
 
@@ -105,17 +140,26 @@ Al hacer clic en cualquier compuerta:
 - **Tasa de aprendizaje**: 0.001
 - **Tamaño de capa oculta**: 2
 - **Épocas**: 10000
-- **Optimizador**: Adam (β1=0.9, β2=0.999, ε=1e-8)
+- **Optimizador**: Adam (por defecto)
 - **Inicialización de pesos**: Aleatoria con semilla fija
 
-## Estructura del Proyecto
+## Optimizadores Disponibles
 
-- `logic_functions_perceptron_neural_network.py`: Archivo principal que contiene:
-  - Implementaciones de redes neuronales
-  - Interfaz gráfica con Tkinter
-  - Funciones de visualización con Matplotlib
-  - Algoritmos de entrenamiento y optimización
-- `README.md`: Documentación del proyecto
+El proyecto implementa varios optimizadores para el entrenamiento de redes neuronales:
+
+1. **SGD (Stochastic Gradient Descent)**
+   - Implementación básica del descenso de gradiente estocástico
+   - Parámetros: tasa de aprendizaje
+
+2. **Adam**
+   - Optimizador adaptativo que combina las ventajas de RMSprop y Momentum
+   - Parámetros: tasa de aprendizaje, beta1, beta2, epsilon
+   - Valores por defecto: learning_rate=0.001, beta1=0.9, beta2=0.999, epsilon=1e-8
+
+3. **RMSprop**
+   - Optimizador que adapta la tasa de aprendizaje para cada parámetro
+   - Parámetros: tasa de aprendizaje, decay_rate, epsilon
+   - Valores por defecto: learning_rate=0.001, decay_rate=0.9, epsilon=1e-8
 
 ## Visualizaciones
 
@@ -124,6 +168,22 @@ El proyecto genera visualizaciones interactivas que muestran:
 1. **Límites de decisión**: Representación gráfica de cómo la red neuronal separa el espacio de entrada
 2. **Puntos de entrenamiento**: Visualización de los datos de entrenamiento y sus etiquetas
 3. **Resultados numéricos**: Tabla con los valores de entrada, salida predicha y valor esperado
+
+## Extensibilidad
+
+El diseño modular y orientado a objetos del proyecto facilita su extensión:
+
+1. **Añadir nuevas puertas lógicas**:
+   - Para problemas linealmente separables: Crear una nueva clase que herede de `PerceptronGate`
+   - Para problemas no linealmente separables: Crear una nueva clase que herede de `NeuralNetworkGate`
+
+2. **Implementar nuevos optimizadores**:
+   - Crear una nueva clase que herede de la clase base `Optimizer`
+   - Implementar el método `update(weights, gradients)`
+
+3. **Modificar la arquitectura de la red**:
+   - Ajustar el parámetro `hidden_size` en las clases de redes neuronales
+   - Extender la clase `NeuralNetworkGate` para soportar más capas ocultas
 
 ## Licencia
 
