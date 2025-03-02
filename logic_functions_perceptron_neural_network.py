@@ -181,6 +181,14 @@ class LogicGateApp:
         self.X_xor = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
         self.y_xor = np.array([[0], [1], [1], [0]])
         
+        # Nuevas puertas lógicas
+        self.X_nand = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+        self.y_nand = np.array([1, 1, 1, 0])
+        self.X_nor = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+        self.y_nor = np.array([1, 0, 0, 0])
+        self.X_xnor = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+        self.y_xnor = np.array([[1], [0], [0], [1]])
+        
         # Interfaz
         self.create_widgets()
 
@@ -189,10 +197,25 @@ class LogicGateApp:
         tk.Label(self.root, text="Seleccione una función lógica:", font=("Arial", 14)).pack(pady=10)
         
         # Botones para seleccionar funciones
-        functions = ["AND", "OR", "NOT", "XOR"]
-        for func in functions:
-            btn = ttk.Button(self.root, text=func, command=lambda f=func: self.train_and_test(f))
-            btn.pack(fill="x", padx=20, pady=5)
+        functions = ["AND", "OR", "NOT", "XOR", "NAND", "NOR", "XNOR"]
+        
+        # Crear un frame para organizar los botones en dos filas
+        btn_frame = tk.Frame(self.root)
+        btn_frame.pack(fill="x", padx=20, pady=5)
+        
+        # Primera fila de botones
+        for i, func in enumerate(functions[:4]):
+            btn = ttk.Button(btn_frame, text=func, command=lambda f=func: self.train_and_test(f))
+            btn.grid(row=0, column=i, padx=5, pady=5, sticky="ew")
+            
+        # Segunda fila de botones
+        for i, func in enumerate(functions[4:]):
+            btn = ttk.Button(btn_frame, text=func, command=lambda f=func: self.train_and_test(f))
+            btn.grid(row=1, column=i, padx=5, pady=5, sticky="ew")
+            
+        # Configurar el grid para que las columnas se expandan uniformemente
+        for i in range(4):
+            btn_frame.grid_columnconfigure(i, weight=1)
         
         # Área para mostrar gráficos
         self.canvas_frame = tk.Frame(self.root)
@@ -204,7 +227,7 @@ class LogicGateApp:
             widget.destroy()
         
         # Entrenar y evaluar el modelo
-        if function_name == "XOR":
+        if function_name in ["XOR", "XNOR"]:
             optimizer = Adam(learning_rate=0.001)
             weights_input_hidden, weights_hidden_output = train_neural_network(
                 getattr(self, f"X_{function_name.lower()}"),
@@ -218,6 +241,40 @@ class LogicGateApp:
                 weights_input_hidden,
                 weights_hidden_output
             )
+            
+            # Para XOR y XNOR, crear un gráfico de límite de decisión especial
+            fig, ax = plt.subplots(figsize=(5, 4))
+            x_min, x_max = -0.5, 1.5
+            y_min, y_max = -0.5, 1.5
+            
+            xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.01),
+                                np.arange(y_min, y_max, 0.01))
+            grid = np.c_[xx.ravel(), yy.ravel()]
+            
+            # Calcular la salida para cada punto en la cuadrícula
+            Z = []
+            for point in grid:
+                hidden_layer_input = np.dot(point, weights_input_hidden)
+                hidden_layer_output = sigmoid(hidden_layer_input)
+                output_layer_input = np.dot(hidden_layer_output, weights_hidden_output)
+                output_layer_output = sigmoid(output_layer_input)
+                Z.append(1 if output_layer_output[0] > 0.5 else 0)
+            
+            Z = np.array(Z).reshape(xx.shape)
+            
+            ax.contourf(xx, yy, Z, alpha=0.8, cmap=plt.cm.Paired)
+            ax.scatter(self.X_xor[:, 0], self.X_xor[:, 1], 
+                      c=[y[0] for y in getattr(self, f"y_{function_name.lower()}")], 
+                      edgecolors='k', marker='o', cmap=plt.cm.Paired)
+            ax.set_title(f"Límite de decisión para {function_name}")
+            ax.set_xlim(x_min, x_max)
+            ax.set_ylim(y_min, y_max)
+            
+            # Integrar el gráfico en la interfaz gráfica
+            canvas = FigureCanvasTkAgg(fig, master=self.canvas_frame)
+            canvas.draw()
+            canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+            
         else:
             weights = train_perceptron(
                 getattr(self, f"X_{function_name.lower()}"),
